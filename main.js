@@ -1,12 +1,4 @@
 /*
-  Import the ip-cidr npm package.
-  See https://www.npmjs.com/package/ip-cidr
-  The ip-cidr package exports a class.
-  Assign the class definition to variable IPCIDR.
-*/
-const IPCIDR = require('ip-cidr');
-
-/*
   Import the built-in path module.
   See https://nodejs.org/api/path.html
   The path module provides utilities for working with file and directory paths.
@@ -23,6 +15,13 @@ const path = require('path');
  */
 const { getIpv4MappedIpv6Address } = require(path.join(__dirname, 'ipv6.js'));
 
+/*
+  Import the ip-cidr npm package.
+  See https://www.npmjs.com/package/ip-cidr
+  The ip-cidr package exports a class.
+  Assign the class definition to variable IPCIDR.
+*/
+const IPCIDR = require('ip-cidr');
 
 class IpAddress {
   constructor() {
@@ -32,14 +31,15 @@ class IpAddress {
     // Developer Hub https://developer.itential.io/ located
     // under Documentation -> Developer Guides -> Log Class Guide
     log.info('Starting the IpAddress product.');
-  }
-  
 
-  getFirstIpAddress(cidrStr, callback) {
+  }
+
+ getFirstIpAddress(cidrStr, callback) {
 
   // Initialize return arguments for callback
   let firstIpAddress = null;
   let callbackError = null;
+  var ipv6 =null;
 
   // Instantiate an object from the imported class and assign the instance to variable cidr.
   const cidr = new IPCIDR(cidrStr);
@@ -60,13 +60,22 @@ class IpAddress {
     // Notice the destructering assignment syntax to get the value of the first array's element.
     [firstIpAddress] = cidr.toArray(options);
   }
+   if(firstIpAddress == null){
+      callbackError = 'Error: Invalid CIDR passed to getFirstIpAddress.';
+  }else{
+      ipv6 = getIpv4MappedIpv6Address(firstIpAddress);
+  }
+  
+  const results = {
+        ipv4: firstIpAddress,
+		ipv6: ipv6
+  }
   // Call the passed callback function.
   // Node.js convention is to pass error data as the first argument to a callback.
   // The IAP convention is to pass returned data as the first argument and error
   // data as the second argument to the callback function.
-  return callback(firstIpAddress, callbackError);
- } 
- 
-  
+  return callback(results, callbackError);
+  }
 }
+
 module.exports = new IpAddress;
